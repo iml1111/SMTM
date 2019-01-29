@@ -17,7 +17,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="title"
-            android:textSize="20sp" />
+            android:textSize="20sp"
+            android:textColor="@color/txtcolor"
+            android:fontFamily="@font/nanum"
+            />
 
         <TextView
             android:id="@+id/like"
@@ -25,7 +28,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1.4"
             android:text="추천 수: 0개"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:textColor="@color/txtcolor"
+            />
 
     </LinearLayout>
 
