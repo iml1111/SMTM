@@ -1,15 +1,22 @@
 package im.iml.app.smtm;
 
+import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -23,6 +30,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -34,10 +44,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.BitSet;
 
 public class DownloadActivity extends AppCompatActivity {
     ArrayList<Episodelist> download_list = new ArrayList<Episodelist>();
@@ -49,6 +57,11 @@ public class DownloadActivity extends AppCompatActivity {
     boolean task_flag = false;
     Bitmap bitmap = null;
     InputStream in = null;
+    NotificationManager notificationManager;
+    String NOTIFICATION_CHANNEL_ID;
+    @SuppressLint("WrongConstant")
+    NotificationChannel notificationChannel;
+    NotificationCompat.Builder notificationBuilder;
 
     WebView webView;
     TextView ctext, ttext, txt_result;
@@ -87,6 +100,11 @@ public class DownloadActivity extends AppCompatActivity {
         });
         webView.getSettings().setJavaScriptEnabled(true);
         webView.addJavascriptInterface(new MyJavascriptInterface(), "Android");
+        AdView mAdView;
+        mAdView = findViewById(R.id.adView);
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
 
         Intent intent = getIntent();
         processIntent(intent);
@@ -108,10 +126,43 @@ public class DownloadActivity extends AppCompatActivity {
     }
 
     public class MSMimgdownload extends AsyncTask<String, String, Void> {
+        @SuppressLint("WrongConstant")
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             task_flag = true;
+            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            NOTIFICATION_CHANNEL_ID = "my_channel_id_01";
+            Intent intent = new Intent(getApplicationContext(), DownloadActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            PendingIntent pi = PendingIntent
+                    .getActivity(getApplicationContext(), 0, intent, 0);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "My Notifications", NotificationManager.IMPORTANCE_MAX);
+
+                // Configure the notification channel.
+                notificationChannel.setDescription("Channel description");
+                notificationChannel.enableLights(true);
+                notificationChannel.setLightColor(Color.RED);
+                notificationChannel.setVibrationPattern(new long[]{0, 1000, 500, 1000});
+                notificationChannel.enableVibration(true);
+                notificationManager.createNotificationChannel(notificationChannel);
+            }
+            notificationBuilder = new NotificationCompat
+                    .Builder(getApplicationContext(), NOTIFICATION_CHANNEL_ID);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                notificationBuilder
+                        .setDefaults(Notification.DEFAULT_ALL)
+                        .setWhen(System.currentTimeMillis())
+                        .setSmallIcon(R.drawable.icon)
+                        .setContentTitle("다운로드 중...")
+                        .setPriority(Notification.PRIORITY_MIN)
+                        .setProgress(0, 0, false)
+                        .setOngoing(false)
+                        .setContentIntent(pi);
+            }
+            notificationManager.notify(1, notificationBuilder.build());
         }
         @Override
         protected Void doInBackground(String... Params) {
@@ -119,6 +170,11 @@ public class DownloadActivity extends AppCompatActivity {
 
                 String title = download_list.get(i).getTitle();
                 String url = download_list.get(i).getUrl();
+                notificationBuilder.setContentTitle("다운로드 중...");
+                notificationBuilder.setProgress(download_list.size(), i, false);
+                notificationBuilder.setContentText("진행 상황: " + i + " / " + download_list.size());
+                notificationBuilder.setAutoCancel(false);
+                notificationManager.notify(1, notificationBuilder.build());
                 if((!task_flag) || isCancelled()){return null;}
                 publishProgress("web_Crawling",
                         title,
@@ -153,7 +209,7 @@ public class DownloadActivity extends AppCompatActivity {
                     }
                     for (Element imgtag : imgtags) {
                         String extend = ".jpg";
-                        String cnt_format = String.format("_%03d", cnt + 1);
+                        @SuppressLint("DefaultLocale") String cnt_format = String.format("_%03d", cnt + 1);
                         String localPath = savePath + "/" + title + cnt_format + extend;
                         publishProgress("progress",
                                 localPath,
@@ -236,6 +292,7 @@ public class DownloadActivity extends AppCompatActivity {
             else if(Params[0].equals("progress")){
                 cprogress.setMax(Integer.parseInt(Params[3]));
                 cprogress.setProgress(Integer.parseInt(Params[2]));
+
             }
             else if(Params[0].equals("inputimg")) {
                 imageView.setImageBitmap(bitmap);
@@ -261,12 +318,18 @@ public class DownloadActivity extends AppCompatActivity {
             txt_result.setText("다운로드 완료");
             Toast.makeText(getApplicationContext(),"만화 다운로드가 완료되었습니다!",Toast.LENGTH_SHORT).show();
             task_flag = false;
+            notificationBuilder.setProgress(0, 0, false);
+            notificationBuilder.setContentTitle("다운로드 완료");
+            notificationBuilder.setContentText("다운로드가 완료되었습니다.");
+            notificationBuilder.setAutoCancel(true);
+            notificationManager.notify(/*notification id*/1, notificationBuilder.build());
         }
 
         @Override
         protected void onCancelled(){
             task_flag = false;
             Toast.makeText(getApplicationContext(),"다운로드가 취소되었습니다.",Toast.LENGTH_SHORT).show();
+            notificationManager.cancel(1);
             finish();
             super.onCancelled();
         }
@@ -299,6 +362,7 @@ public class DownloadActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy(){
+        notificationManager.cancel(1);
         try {
             if (msMimgdownload != null && msMimgdownload.getStatus() == AsyncTask.Status.RUNNING){
                 msMimgdownload.cancel(true);

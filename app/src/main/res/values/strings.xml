@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">SMTM</string>
+    <string name="admob_id">ca-app-pub-2896242970651571~7495952077</string>
+    <string name="banner_ad_unit_id">ca-app-pub-2896242970651571/4486645356</string>
+    <string name="app_ver">0.1</string>
 </resources>

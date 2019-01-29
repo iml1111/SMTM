@@ -18,6 +18,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -53,6 +56,11 @@ public class resultActivity extends AppCompatActivity {
         img_loading = findViewById(R.id.img_android);
         anim = AnimationUtils.loadAnimation(this, R.anim.loading);
         img_loading.setAnimation(anim);
+        AdView mAdView;
+        mAdView = findViewById(R.id.adView);
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
 
         Intent intent = getIntent();
         processIntent(intent);

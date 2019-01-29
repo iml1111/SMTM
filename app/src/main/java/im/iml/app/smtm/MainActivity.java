@@ -13,6 +13,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
@@ -27,12 +30,21 @@ public class MainActivity extends AppCompatActivity {
     public MainHandler mainHandler = new MainHandler();
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         search_bar = findViewById(R.id.search_bar);
+        MobileAds.initialize(this, getString(R.string.admob_id));
+        AdView mAdView;
+        mAdView = findViewById(R.id.adView);
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+
         showPermissionDialog();
+
 
     }
 
@@ -48,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void viewMenual(View v){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("SMTM Ver 0.1");
+        builder.setTitle("SMTM Ver " +getString(R.string.app_ver));
         builder.setMessage("Hi, I'M IML!" +
                 "\n다운받은 만화는 Download 폴더에 저장되며, 곧바로 갤러리 앱 등을 통해 확인할 수 있습니다." +
                 "\n\n여러가지 버그로 인해서 제대로 작동하지 않을 수도 있습니다. 재실행시켜도 계속 문제시, 문의바랍니다.");

@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
 import android.view.animation.Animation;
@@ -17,6 +16,9 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -60,6 +62,11 @@ public class episodeActivity extends AppCompatActivity {
         translateup = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.translate_up);
         translatedown = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.translate_down);
         btn_down = findViewById(R.id.btn_down);
+        AdView mAdView;
+        mAdView = findViewById(R.id.adView);
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
 
         Intent intent = getIntent();
         processIntent(intent);
